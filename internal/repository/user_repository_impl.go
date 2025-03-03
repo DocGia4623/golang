@@ -103,23 +103,30 @@ func (u *UserRepositoryImpl) FindByUsername(username string) (*models.User, erro
 func (u *UserRepositoryImpl) FindIfUserHasRole(userID uint, roles []models.Role) error {
 	var count int64
 
-	// Extract role names from the slice of roles
-	var roleNames []string
-	for _, role := range roles {
-		roleNames = append(roleNames, role.Name)
+	// 🔹 Trích xuất tên role từ danh sách roles
+	roleNames := make([]string, len(roles))
+	for i, role := range roles {
+		roleNames[i] = role.Name
 	}
 
-	result := u.Db.Table("users").
+	// 🔹 Truy vấn kiểm tra User có Role không
+	result := u.Db.Model(&models.User{}).
 		Joins("JOIN user_roles ON users.id = user_roles.user_id").
 		Joins("JOIN roles ON user_roles.role_id = roles.id").
 		Where("users.id = ? AND roles.name IN ?", userID, roleNames).
-		Count(&count)
+		Select("COUNT(*)").Scan(&count)
 
+	// 🔹 Kiểm tra lỗi query
 	if result.Error != nil {
 		return result.Error
 	}
 
-	return nil
+	// 🔹 Kiểm tra nếu không tìm thấy Role nào
+	if count == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil // ✅ User có ít nhất một Role phù hợp
 }
 
 func (u *UserRepositoryImpl) AddRole(userId uint, roles []models.Role) error {

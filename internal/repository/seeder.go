@@ -17,17 +17,21 @@ func SeedRolesAndPermissions() {
 		{Name: constant.WriteUser},
 		{Name: constant.DeleteUser},
 	}
+	for _, perm := range permissions {
+		db.FirstOrCreate(&perm, models.Permission{Name: perm.Name})
+	}
 
 	// Define roles
 	roles := []models.Role{
+		{Name: "user"},
 		{Name: "admin"},
 		{Name: "editor"},
 		{Name: "viewer"},
 	}
 
-	// Insert into database
-	db.Create(&permissions)
-	db.Create(&roles)
+	for _, role := range roles {
+		db.FirstOrCreate(&role, models.Role{Name: role.Name})
+	}
 
 	var dbPermissions []models.Permission
 	db.Where("name IN ?", []string{

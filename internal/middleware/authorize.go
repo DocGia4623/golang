@@ -52,13 +52,13 @@ func (m *Middleware) AuthorizeRole(permission string) gin.HandlerFunc {
 			return
 		}
 
-		permission, err := m.PermissionRepo.FindIfExist(permission)
-		if err != nil || permission == nil {
+		permissionModel, err := m.PermissionRepo.FindIfExist(permission)
+		if err != nil || permissionModel == nil {
 			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "Permission not found"})
 			return
 		}
 
-		roles, err := m.PermissionRepo.FindRoleBelong(permission.Name)
+		roles, err := m.PermissionRepo.FindRoleBelong(permissionModel.Name)
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "error find role"})
 			return
@@ -70,12 +70,9 @@ func (m *Middleware) AuthorizeRole(permission string) gin.HandlerFunc {
 		idUser := uint(id)
 		// Check if user has role
 		err = m.UserRepo.FindIfUserHasRole(idUser, roles)
-		if err == nil {
-			ctx.Next()
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "Permission denied"})
 			return
 		}
-
-		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "Permission denied"})
-
 	}
 }

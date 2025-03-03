@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"testwire/config"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -27,7 +29,19 @@ func GenerateAccessToken(ttl time.Duration, payload interface{}, secretJWTkey st
 }
 
 func ValidateAccessToken(token string, signedJWTKey string) (interface{}, error) {
+	ctx := context.Background()
 
+	// 🔹 Kiểm tra token trong Redis (Them tiền tố trước)
+	redisToken := "Bearer " + token
+
+	// 1️⃣ Kiểm tra token có bị thu hồi không trong Redis
+	exists, err := config.RedisClient.Exists(ctx, redisToken).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis error: %w", err)
+	}
+	if exists > 0 { // Nếu token có trong Redis, nghĩa là nó đã bị thu hồi
+		return nil, fmt.Errorf("token has been revoked")
+	}
 	// 2️⃣ Giải mã token
 	tkn, err := jwt.Parse(token, func(jwtToken *jwt.Token) (interface{}, error) {
 		if _, ok := jwtToken.Method.(*jwt.SigningMethodHMAC); !ok {
