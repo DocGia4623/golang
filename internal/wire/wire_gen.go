@@ -33,12 +33,20 @@ func InitializeApp() (*App, error) {
 	userController := controller.NewUserController(userSerive)
 	permissionRepository := repository.NewPermissionRepositoryImpl(db)
 	middlewareMiddleware := middleware.NewMiddleware(userRepository, permissionRepository)
+	productRepository := repository.NewProductRepositoryImpl(db)
+	productService := services.NewProductServiceImpl(productRepository)
+	productController := controller.NewProductController(productService)
+	orderRepository := repository.NewOrderRepositoryImpl(db)
+	orderSerivce := services.NewOrderServiceImpl(orderRepository)
+	orderController := controller.NewOrderController(orderSerivce)
 	app := &App{
-		AuthController: authenticationController,
-		AuthService:    authenticationService,
-		AuthRepo:       userRepository,
-		UserController: userController,
-		Middleware:     middlewareMiddleware,
+		AuthController:    authenticationController,
+		AuthService:       authenticationService,
+		AuthRepo:          userRepository,
+		UserController:    userController,
+		Middleware:        middlewareMiddleware,
+		ProductController: productController,
+		OrderController:   orderController,
 	}
 	return app, nil
 }
@@ -53,9 +61,11 @@ var AppSet = wire.NewSet(config.LoadConfig, config.ConnectDB, RepositorySet,
 )
 
 type App struct {
-	AuthController *controller.AuthenticationController
-	AuthService    services.AuthenticationService
-	AuthRepo       repository.UserRepository
-	UserController *controller.UserController
-	Middleware     *middleware.Middleware
+	AuthController    *controller.AuthenticationController
+	AuthService       services.AuthenticationService
+	AuthRepo          repository.UserRepository
+	UserController    *controller.UserController
+	Middleware        *middleware.Middleware
+	ProductController *controller.ProductController
+	OrderController   *controller.OrderController
 }

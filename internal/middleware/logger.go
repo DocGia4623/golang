@@ -1,24 +1,42 @@
 package middleware
 
 import (
-	"fmt"
+	"encoding/json"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
+// Logger middleware để format log theo JSON
 func Logger() gin.HandlerFunc {
-	// code for logging
-	return gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		log.Println("Logger middleware called") // Add this line
-		return fmt.Sprintf("%s - [%s] \"%s %s\" %d %s\n",
-			param.ClientIP,
-			param.TimeStamp.UTC().Format(time.RFC822),
-			param.Method,
-			param.Path,
-			param.StatusCode,
-			param.Latency,
-		)
-	})
+	return func(c *gin.Context) {
+		start := time.Now()
+		c.Next()
+		latency := time.Since(start)
+
+		logEntry := map[string]interface{}{
+			"time":     start.UTC().Format(time.RFC3339),
+			"level":    "INFO",
+			"message":  "Request handled",
+			"method":   c.Request.Method,
+			"path":     c.Request.URL.Path,
+			"status":   c.Writer.Status(),
+			"latency":  latency.String(),
+			"service":  "golang-app",
+			"clientIP": c.ClientIP(),
+		}
+
+		// Convert log thành JSON
+		logData, err := json.Marshal(logEntry)
+		if err != nil {
+			log.Printf("❌ Lỗi JSON: %v", err)
+		} else {
+			jsonLog := string(logData)
+			jsonLog = strings.ReplaceAll(jsonLog, "\n", " ")
+			jsonLog = strings.ReplaceAll(jsonLog, "\r", " ")
+			log.Print(jsonLog)
+		}
+	}
 }

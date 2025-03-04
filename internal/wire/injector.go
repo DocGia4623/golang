@@ -25,11 +25,13 @@ var AppSet = wire.NewSet(
 )
 
 type App struct {
-	AuthController *controller.AuthenticationController
-	AuthService    services.AuthenticationService
-	AuthRepo       repository.UserRepository
-	UserController *controller.UserController
-	Middleware     *middleware.Middleware
+	AuthController    *controller.AuthenticationController
+	AuthService       services.AuthenticationService
+	AuthRepo          repository.UserRepository
+	UserController    *controller.UserController
+	Middleware        *middleware.Middleware
+	ProductController *controller.ProductController
+	OrderController   *controller.OrderController
 }
 
 // InitializeUserService khởi tạo UserService tự động

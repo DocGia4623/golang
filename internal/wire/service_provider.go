@@ -10,4 +10,6 @@ var ServiceSet = wire.NewSet(
 	services.NewAuthenticationServiceImpl,
 	services.NewRefreshTokenServiceImpl,
 	services.NewUserServiceImpl,
+	services.NewOrderServiceImpl,
+	services.NewProductServiceImpl,
 )

@@ -41,6 +41,9 @@ func ConnectDB(config *Config) *gorm.DB {
 		&models.Role{},
 		&models.Role{},
 		&models.RefreshToken{},
+		&models.Product{},
+		&models.Order{},
+		&models.OrderDetail{},
 	}
 
 	for _, model := range modelsToMigrate {

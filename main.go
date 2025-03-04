@@ -14,7 +14,6 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/gin-gonic/gin"
-	gindump "github.com/tpkeeper/gin-dump"
 )
 
 // @title My API
@@ -24,11 +23,12 @@ import (
 // @BasePath /
 func main() {
 	router := gin.New()
+	gin.SetMode(gin.ReleaseMode)
 	appConfig, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
-	router.Use(gin.Recovery(), gindump.Dump(), middleware.Logger())
+	router.Use(gin.Recovery(), middleware.Logger())
 	config.Connect(appConfig)
 
 	app, err := wire.InitializeApp()
@@ -40,6 +40,7 @@ func main() {
 
 	routes.AuthRoute(*app.AuthController, router)
 	routes.UserRoute(*app.UserController, app.Middleware, router)
+	routes.ProductRoute(*app.ProductController, app.Middleware, router)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.Run(":8080")
 }

@@ -10,4 +10,6 @@ var RepositorySet = wire.NewSet(
 	repository.NewUserRepositoryImpl,
 	repository.NewRefreshTokenRepositoryImpl,
 	repository.NewPermissionRepositoryImpl,
+	repository.NewOrderRepositoryImpl,
+	repository.NewProductRepositoryImpl,
 )

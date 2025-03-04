@@ -8,6 +8,7 @@ import (
 )
 
 type ProductRepository interface {
+	GetAll() ([]models.Product, error)
 	Save(models.Product) error
 	Find(string) (*models.Product, error)
 	Delete(string) error
@@ -39,4 +40,13 @@ func (p *ProductRepositoryImpl) Delete(name string) error {
 		return gorm.ErrRecordNotFound // Nếu không xóa được thì trả về lỗi
 	}
 	return result.Error
+}
+
+func (p *ProductRepositoryImpl) GetAll() ([]models.Product, error) {
+	var products []models.Product
+	result := p.Db.Find(&products)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return products, nil
 }
