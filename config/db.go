@@ -76,6 +76,7 @@ func ConnectRedis(config *Config) *redis.Client {
 func ConnectRabbitMQ(config *Config) *amqp091.Connection {
 	// Chuỗi kết nối RabbitMQ
 	RabbitMQConnStr := fmt.Sprintf("amqp://%s:%s@%s:%s/", config.RabbitMqUser, config.RabbitMQPassword, config.RabbitMQHost, config.RabbitMQPort)
+	fmt.Println(RabbitMQConnStr)
 	// Kết nối RabbitMQ
 	conn, err := amqp091.Dial(RabbitMQConnStr)
 	if err != nil {

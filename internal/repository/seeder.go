@@ -49,5 +49,5 @@ func SeedRolesAndPermissions() {
 		}
 	}
 
-	log.Println("✅ Seeded roles and permissions")
+	log.Println("Seeded roles and permissions")
 }

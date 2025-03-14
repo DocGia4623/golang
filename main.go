@@ -3,17 +3,16 @@ package main
 import (
 	"log"
 	"testwire/config"
-	"testwire/internal/middleware"
 	"testwire/internal/repository"
 	"testwire/internal/wire"
+	"testwire/logs"
 	"testwire/routes"
 
 	_ "testwire/docs"
 
+	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-
-	"github.com/gin-gonic/gin"
 )
 
 // @title My API
@@ -22,18 +21,21 @@ import (
 // @host localhost:8080
 // @BasePath /
 func main() {
+	logs.Init()
+
 	router := gin.New()
 	gin.SetMode(gin.ReleaseMode)
 	appConfig, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
-	router.Use(gin.Recovery(), middleware.Logger())
+	config.AppConfig = *appConfig
+	router.Use(gin.Recovery(), gin.Logger())
 	config.Connect(appConfig)
 
 	app, err := wire.InitializeApp()
 	if err != nil {
-		log.Fatalf("❌ Failed to initialize app: %v", err)
+		log.Fatalf("Failed to initialize app: %v", err)
 	}
 
 	repository.SeedRolesAndPermissions()
@@ -43,11 +45,4 @@ func main() {
 	routes.ProductRoute(*app.ProductController, app.Middleware, router)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.Run(":8080")
-}
-
-type LogMessage struct {
-	Level   string `json:"level"`
-	Time    string `json:"time"`
-	Message string `json:"message"`
-	Service string `json:"service"`
 }

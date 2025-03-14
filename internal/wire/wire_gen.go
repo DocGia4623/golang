@@ -36,9 +36,6 @@ func InitializeApp() (*App, error) {
 	productRepository := repository.NewProductRepositoryImpl(db)
 	productService := services.NewProductServiceImpl(productRepository)
 	productController := controller.NewProductController(productService)
-	orderRepository := repository.NewOrderRepositoryImpl(db)
-	orderSerivce := services.NewOrderServiceImpl(orderRepository)
-	orderController := controller.NewOrderController(orderSerivce)
 	app := &App{
 		AuthController:    authenticationController,
 		AuthService:       authenticationService,
@@ -46,7 +43,6 @@ func InitializeApp() (*App, error) {
 		UserController:    userController,
 		Middleware:        middlewareMiddleware,
 		ProductController: productController,
-		OrderController:   orderController,
 	}
 	return app, nil
 }
@@ -67,5 +63,4 @@ type App struct {
 	UserController    *controller.UserController
 	Middleware        *middleware.Middleware
 	ProductController *controller.ProductController
-	OrderController   *controller.OrderController
 }

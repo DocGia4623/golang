@@ -1,42 +1,27 @@
 package middleware
 
 import (
-	"encoding/json"
-	"log"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
-// Logger middleware để format log theo JSON
-func Logger() gin.HandlerFunc {
+// LoggerMiddleware trả về một middleware để logging request
+func Logger(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		c.Next()
 		latency := time.Since(start)
 
-		logEntry := map[string]interface{}{
-			"time":     start.UTC().Format(time.RFC3339),
-			"level":    "INFO",
-			"message":  "Request handled",
-			"method":   c.Request.Method,
-			"path":     c.Request.URL.Path,
-			"status":   c.Writer.Status(),
-			"latency":  latency.String(),
-			"service":  "golang-app",
-			"clientIP": c.ClientIP(),
-		}
-
-		// Convert log thành JSON
-		logData, err := json.Marshal(logEntry)
-		if err != nil {
-			log.Printf("❌ Lỗi JSON: %v", err)
-		} else {
-			jsonLog := string(logData)
-			jsonLog = strings.ReplaceAll(jsonLog, "\n", " ")
-			jsonLog = strings.ReplaceAll(jsonLog, "\r", " ")
-			log.Print(jsonLog)
-		}
+		logger.Info("Request handled",
+			zap.String("time", start.UTC().Format(time.RFC3339)),
+			zap.String("method", c.Request.Method),
+			zap.String("path", c.Request.URL.Path),
+			zap.Int("status", c.Writer.Status()),
+			zap.String("latency", latency.String()),
+			zap.String("service", "golang-app"),
+			zap.String("clientIP", c.ClientIP()),
+		)
 	}
 }

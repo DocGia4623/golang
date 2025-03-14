@@ -10,6 +10,6 @@ import (
 var ControllerSet = wire.NewSet(
 	controller.NewAuthenticationController,
 	controller.NewUserController,
-	controller.NewOrderController,
+	// controller.NewOrderController,
 	controller.NewProductController,
 )

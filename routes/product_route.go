@@ -13,5 +13,6 @@ func ProductRoute(productController controller.ProductController, mw *middleware
 		productRoutes.GET("", productController.GetAll)
 		productRoutes.POST("/create", productController.CreateProduct)
 		productRoutes.POST("/delete", productController.DeleteProduct)
+		productRoutes.POST("/find", productController.FindByName)
 	}
 }

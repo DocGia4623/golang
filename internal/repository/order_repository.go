@@ -23,8 +23,24 @@ func NewOrderRepositoryImpl(db *gorm.DB) OrderRepository {
 }
 
 func (o *OrderRepositoryImpl) CreateOrder(order models.Order) error {
-	result := o.Db.Create(order)
-	return result.Error
+	// Bắt đầu transaction để đảm bảo tính toàn vẹn của dữ liệu
+	tx := o.Db.Begin()
+	if err := tx.Create(&order).Error; err != nil {
+		tx.Rollback() // Nếu gặp lỗi, rollback transaction
+		return err
+	}
+
+	// Lưu các chi tiết đơn hàng
+	for _, item := range order.OrderItems {
+		item.OrderID = order.ID // Gán OrderID cho OrderDetail
+		if err := tx.Create(&item).Error; err != nil {
+			tx.Rollback() // Nếu có lỗi khi lưu chi tiết đơn hàng, rollback
+			return err
+		}
+	}
+
+	// Commit transaction nếu mọi thứ ổn
+	return tx.Commit().Error
 }
 func (o *OrderRepositoryImpl) CancelOrder(id uint) error {
 	result := o.Db.Where("ID = ?", id).Update("status", constant.Cancelled)

@@ -12,6 +12,7 @@ type ProductRepository interface {
 	Save(models.Product) error
 	Find(string) (*models.Product, error)
 	Delete(string) error
+	FindByName(string) (*[]models.Product, error)
 }
 
 type ProductRepositoryImpl struct {
@@ -20,6 +21,15 @@ type ProductRepositoryImpl struct {
 
 func NewProductRepositoryImpl(db *gorm.DB) ProductRepository {
 	return &ProductRepositoryImpl{Db: db}
+}
+
+func (p *ProductRepositoryImpl) FindByName(name string) (*[]models.Product, error) {
+	var products []models.Product
+	result := p.Db.Where("name = ?", name).Find(&products)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &products, result.Error
 }
 
 func (p *ProductRepositoryImpl) Save(product models.Product) error {

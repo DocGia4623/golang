@@ -10,6 +10,7 @@ type ProductService interface {
 	FindProduct(string) (*models.Product, error)
 	DeleteProduct(string) error
 	GetAll() ([]models.Product, error)
+	FindByName(string) (*[]models.Product, error)
 }
 
 type ProductServiceImpl struct {
@@ -18,6 +19,10 @@ type ProductServiceImpl struct {
 
 func NewProductServiceImpl(productRepo repository.ProductRepository) ProductService {
 	return &ProductServiceImpl{ProductRepo: productRepo}
+}
+
+func (p *ProductServiceImpl) FindByName(name string) (*[]models.Product, error) {
+	return p.ProductRepo.FindByName(name)
 }
 
 func (p *ProductServiceImpl) SaveProduct(product models.Product) error {
