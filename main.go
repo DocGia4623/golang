@@ -40,6 +40,10 @@ func main() {
 
 	repository.SeedRolesAndPermissions()
 
+	if err := app.ProductRepo.MigrateToElastic(); err != nil {
+		log.Fatalf("Failed to migrate products to Elasticsearch: %v", err)
+	}
+
 	routes.AuthRoute(*app.AuthController, router)
 	routes.UserRoute(*app.UserController, app.Middleware, router)
 	routes.ProductRoute(*app.ProductController, app.Middleware, router)

@@ -14,24 +14,34 @@ import (
 
 type ProductController struct {
 	ProductService services.ProductService
+	UserService    services.UserSerive
 }
 
-func NewProductController(productService services.ProductService) *ProductController {
-	return &ProductController{ProductService: productService}
+func NewProductController(productService services.ProductService, userService services.UserSerive) *ProductController {
+	return &ProductController{ProductService: productService, UserService: userService}
 }
 
 func (controller *ProductController) GetSearchHistory(c *gin.Context) {
 	// Query lấy lịch sử tìm kiếm từ Elasticsearch
-	query := `{
-		"query": {
-			"match": { "message": "User search successful" }
-		},
-		"sort": [ { "timestamp": { "order": "desc" } } ]
-	}`
-
+	// query := `{
+	// 	"query": {
+	// 		"match": { "message": "User search successful" }
+	// 	},
+	// 	"sort": [ { "timestamp": { "order": "desc" } } ]
+	// }`
 }
 func (controller *ProductController) FindByName(c *gin.Context) {
 	var webResponse response.Response
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		webResponse = response.Response{
+			Code:    http.StatusBadRequest,
+			Status:  "bad request",
+			Message: "Token is required",
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
 	name := c.PostForm("name")
 	if name == "" {
 		webResponse = response.Response{
@@ -52,8 +62,20 @@ func (controller *ProductController) FindByName(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, webResponse)
 		return
 	}
+	userId, err := controller.UserService.GetUserID(token)
+	if err != nil {
+		webResponse = response.Response{
+			Code:    http.StatusInternalServerError,
+			Status:  "fail",
+			Message: "Invalid token: " + err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
 	logs.Init()
 	logs.Logger.WithFields(logrus.Fields{
+		"userId":    userId,
+		"Data":      products,
 		"message":   "User search successful for name: " + name,
 		"level":     "info",
 		"timestamp": time.Now().Format(time.RFC3339),
@@ -99,7 +121,7 @@ func (controller *ProductController) CreateProduct(c *gin.Context) {
 		Message: "Created product",
 		Data:    product,
 	}
-	c.JSON(http.StatusInternalServerError, webResponse)
+	c.JSON(http.StatusOK, webResponse)
 }
 
 func (controller *ProductController) DeleteProduct(c *gin.Context) {

@@ -1,0 +1,5 @@
+# - pipeline.id: json_logs
+#   path.config: "C:/Users/Admin/Desktop/test/logstash/pipeline/json_logs.conf"
+
+# - pipeline.id: elasticsearch_logs
+#   path.config: "C:/Users/Admin/Desktop/test/logstash/pipeline/es_logs.conf"

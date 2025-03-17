@@ -17,6 +17,22 @@ func NewUserController(userService services.UserSerive) *UserController {
 	return &UserController{UserService: userService}
 }
 
+func (controller *UserController) GetUsesrId(c *gin.Context) {
+	header := c.Request.Header.Get("Authorization")
+	if header == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Token is required"})
+		c.Abort()
+		return
+	}
+	userID, err := controller.UserService.GetUserID(header)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid token"})
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"user_id": userID})
+}
+
 func (controller *UserController) AddRoleForUser(c *gin.Context) {
 	var webResponse response.Response
 

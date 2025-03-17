@@ -21,6 +21,7 @@ var AppSet = wire.NewSet(
 	MiddlerwareSet,             // Inject Middleware
 	ServiceSet,                 // Inject Service
 	ControllerSet,              // Inject Controller
+	ClientSet,                  // Inject Client
 	wire.Struct(new(App), "*"), // Tự động inject vào struct Ap
 )
 
@@ -31,6 +32,7 @@ type App struct {
 	UserController    *controller.UserController
 	Middleware        *middleware.Middleware
 	ProductController *controller.ProductController
+	ProductRepo       repository.ProductRepository
 	// OrderController   *controller.OrderController
 }
 

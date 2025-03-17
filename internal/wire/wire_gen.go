@@ -33,9 +33,13 @@ func InitializeApp() (*App, error) {
 	userController := controller.NewUserController(userSerive)
 	permissionRepository := repository.NewPermissionRepositoryImpl(db)
 	middlewareMiddleware := middleware.NewMiddleware(userRepository, permissionRepository)
-	productRepository := repository.NewProductRepositoryImpl(db)
+	client, err := config.NewElasticClient()
+	if err != nil {
+		return nil, err
+	}
+	productRepository := repository.NewProductRepositoryImpl(db, client)
 	productService := services.NewProductServiceImpl(productRepository)
-	productController := controller.NewProductController(productService)
+	productController := controller.NewProductController(productService, userSerive)
 	app := &App{
 		AuthController:    authenticationController,
 		AuthService:       authenticationService,
@@ -43,6 +47,7 @@ func InitializeApp() (*App, error) {
 		UserController:    userController,
 		Middleware:        middlewareMiddleware,
 		ProductController: productController,
+		ProductRepo:       productRepository,
 	}
 	return app, nil
 }
@@ -53,7 +58,8 @@ func InitializeApp() (*App, error) {
 var AppSet = wire.NewSet(config.LoadConfig, config.ConnectDB, RepositorySet,
 	MiddlerwareSet,
 	ServiceSet,
-	ControllerSet, wire.Struct(new(App), "*"),
+	ControllerSet,
+	ClientSet, wire.Struct(new(App), "*"),
 )
 
 type App struct {
@@ -63,4 +69,5 @@ type App struct {
 	UserController    *controller.UserController
 	Middleware        *middleware.Middleware
 	ProductController *controller.ProductController
+	ProductRepo       repository.ProductRepository
 }
