@@ -37,6 +37,7 @@ func (u *UserRepositoryImpl) Save(user request.CreateUserRequest) error {
 		Password: user.Password, // Nên hash password trước khi lưu
 		Age:      uint(user.Age),
 	}
+
 	result := u.Db.Create(&newUser)
 	if result.Error != nil {
 		return fmt.Errorf("failed to save user: %w", result.Error)

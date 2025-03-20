@@ -30,6 +30,49 @@ func (controller *ProductController) GetSearchHistory(c *gin.Context) {
 	// 	"sort": [ { "timestamp": { "order": "desc" } } ]
 	// }`
 }
+
+// lấy hết lịch sử tìm kiếm dựa theo id người dùng
+func (controller *ProductController) GetSearchHistoryByUserId(c *gin.Context) {
+	var webResponse response.Response
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		webResponse = response.Response{
+			Code:    http.StatusBadRequest,
+			Status:  "bad request",
+			Message: "Token is required",
+		}
+		c.JSON(http.StatusBadRequest, webResponse)
+		return
+	}
+	userId, err := controller.UserService.GetUserID(token)
+	if err != nil {
+		webResponse = response.Response{
+			Code:    http.StatusInternalServerError,
+			Status:  "fail",
+			Message: "Invalid token: " + err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	history, err := controller.ProductService.GetSearchHistoryByUserId(userId)
+	if err != nil {
+		webResponse = response.Response{
+			Code:    http.StatusInternalServerError,
+			Status:  "fail",
+			Message: "Server error",
+		}
+		c.JSON(http.StatusInternalServerError, webResponse)
+		return
+	}
+	webResponse = response.Response{
+		Code:    http.StatusOK,
+		Status:  "ok",
+		Message: "Showing search history:",
+		Data:    history,
+	}
+	c.JSON(http.StatusOK, webResponse)
+}
+
 func (controller *ProductController) FindByName(c *gin.Context) {
 	var webResponse response.Response
 	token := c.GetHeader("Authorization")
@@ -173,5 +216,5 @@ func (controller *ProductController) GetAll(c *gin.Context) {
 		Message: "Showing product:",
 		Data:    products,
 	}
-	c.JSON(http.StatusInternalServerError, webResponse)
+	c.JSON(http.StatusOK, webResponse)
 }

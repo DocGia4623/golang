@@ -18,6 +18,7 @@ type ProductService interface {
 	GetAll() ([]models.Product, error)
 	FindByName(string) (*[]models.Product, error)
 	GetSearchHistory(string) ([]models.Product, error)
+	GetSearchHistoryByUserId(int) ([]models.Product, error)
 }
 
 type ProductServiceImpl struct {
@@ -26,6 +27,10 @@ type ProductServiceImpl struct {
 
 func NewProductServiceImpl(productRepo repository.ProductRepository) ProductService {
 	return &ProductServiceImpl{ProductRepo: productRepo}
+}
+
+func (p *ProductServiceImpl) GetSearchHistoryByUserId(userId int) ([]models.Product, error) {
+	return p.ProductRepo.GetSearchHistoryByUserId(userId)
 }
 
 // GetSearchHistory lấy danh sách lịch sử tìm kiếm có "search successful" trong message
@@ -52,14 +57,14 @@ func (p *ProductServiceImpl) GetSearchHistory(userId string) ([]models.Product, 
 		ES.Search.WithPretty(),
 	)
 	if err != nil {
-		log.Printf("Lỗi tìm kiếm Elasticsearch: %v", err)
+		log.Printf("Lỗi tìm kiếm elasticsearch: %v", err)
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	// Kiểm tra phản hồi
 	if res.IsError() {
-		return nil, fmt.Errorf("Elasticsearch trả về lỗi: %s", res.String())
+		return nil, fmt.Errorf("elasticsearch trả về lỗi: %s", res.String())
 	}
 
 	// Phân tích JSON phản hồi

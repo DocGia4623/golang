@@ -21,6 +21,7 @@ type ProductRepository interface {
 	Delete(string) error
 	FindByName(string) (*[]models.Product, error)
 	MigrateToElastic() error
+	GetSearchHistoryByUserId(userId int) ([]models.Product, error)
 }
 
 type ProductRepositoryImpl struct {
@@ -32,6 +33,60 @@ func NewProductRepositoryImpl(db *gorm.DB, esClient *elasticsearch.Client) Produ
 	return &ProductRepositoryImpl{Db: db, ESClient: esClient}
 }
 
+// Struct ánh xạ `_source` từ Elasticsearch
+type SourceData struct {
+	Data []models.Product `json:"Data"` // Dữ liệu sản phẩm nằm trong "Data"
+}
+
+func (p *ProductRepositoryImpl) GetSearchHistoryByUserId(userId int) ([]models.Product, error) {
+	ctx := context.Background()
+	// Tạo truy vấn tìm kiếm
+	query := fmt.Sprintf(`{
+		"query": {
+			"match": {
+				"userId": %d
+			}
+		}
+	}`, userId)
+	// Thực hiện truy vấn đến Elasticsearch
+	res, err := p.ESClient.Search(
+		p.ESClient.Search.WithContext(ctx),
+		p.ESClient.Search.WithIndex("logstash-docker-2025.03.20"), // Chỉ tìm trong index "products"
+		p.ESClient.Search.WithBody(strings.NewReader(query)),
+		p.ESClient.Search.WithTrackTotalHits(true),
+		p.ESClient.Search.WithPretty(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error executing search query: %v", err)
+	}
+	defer res.Body.Close()
+	// Đọc kết quả trả về
+	if res.IsError() {
+		return nil, fmt.Errorf("error response from Elasticsearch: %s", res.String())
+	}
+	// Giải mã kết quả JSON
+	var result struct {
+		Hits struct {
+			Hits []struct {
+				Source SourceData `json:"_source"`
+			} `json:"hits"`
+		} `json:"hits"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("error decoding Elasticsearch response: %v", err)
+	}
+	// Chuyển kết quả thành danh sách sản phẩm
+	var products []models.Product
+	for _, hit := range result.Hits.Hits {
+		products = append(products, hit.Source.Data...)
+	}
+	// Nếu không có sản phẩm nào được tìm thấy, trả về nil
+	if len(products) == 0 {
+		return nil, fmt.Errorf("no products found for userId %d", userId)
+	}
+	return products, nil
+	// Trả về danh sách sản phẩm tìm thấy
+}
 func (p *ProductRepositoryImpl) MigrateToElastic() error {
 	// Migrate dữ liệu từ PostgreSQL sang Elasticsearch
 	// Lấy tất cả dữ liệu từ PostgreSQL

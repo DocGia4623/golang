@@ -14,5 +14,6 @@ func ProductRoute(productController controller.ProductController, mw *middleware
 		productRoutes.POST("/create", productController.CreateProduct)
 		productRoutes.POST("/delete", productController.DeleteProduct)
 		productRoutes.POST("/find", productController.FindByName)
+		productRoutes.GET("/myhistory", productController.GetSearchHistoryByUserId)
 	}
 }
