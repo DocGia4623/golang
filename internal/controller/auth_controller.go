@@ -26,6 +26,15 @@ func NewAuthenticationController(authenticationService services.AuthenticationSe
 	}
 }
 
+// @Summary Login
+// @Description Authenticate user and return access & refresh tokens
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param login body request.LoginRequest true "Login details"
+// @Success 200 {object} response.LoginResponse
+// @Failure 400 {object} response.Response
+// @Router /auth/login [post]
 func (controller *AuthenticationController) Login(c *gin.Context) {
 	LoginRequest := request.LoginRequest{}
 	err := c.ShouldBindJSON(&LoginRequest)
@@ -59,6 +68,15 @@ func (controller *AuthenticationController) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, webResponse)
 }
 
+// @Summary Register
+// @Description Register a new user
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param register body request.CreateUserRequest true "User registration details"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Router /auth/register [post]
 func (controller *AuthenticationController) Register(c *gin.Context) {
 	UserCreateRequest := request.CreateUserRequest{}
 	err := c.ShouldBindJSON(&UserCreateRequest)
@@ -74,6 +92,14 @@ func (controller *AuthenticationController) Register(c *gin.Context) {
 	c.JSON(http.StatusOK, webResponse)
 }
 
+// @Summary Refresh Token
+// @Description Refresh access token using refresh token from cookie
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} response.LoginResponse
+// @Failure 400 {object} response.Response
+// @Router /auth/refresh [post]
 func (controller *AuthenticationController) RefreshToken(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
@@ -91,6 +117,15 @@ func (controller *AuthenticationController) RefreshToken(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Response{Code: http.StatusOK, Status: "ok", Message: "Refresh token success", Data: response.LoginResponse{TokenType: "Bearer Token", RefreshToken: newRefreshToken, AccessToken: newAccessToken}})
 }
 
+// @Summary Logout
+// @Description Logout user by invalidating refresh token
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "Access token"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Router /auth/logout [post]
 func (controller *AuthenticationController) Logout(c *gin.Context) {
 	var webResponse response.Response
 	token := c.GetHeader("Authorization")
