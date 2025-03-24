@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"log"
+	"os"
+	"os/signal"
 	"testwire/config"
+	"testwire/internal/middleware"
 	"testwire/internal/repository"
 	"testwire/internal/wire"
 	"testwire/logs"
@@ -21,6 +26,19 @@ import (
 // @host localhost:8080
 // @BasePath /api/v1
 func main() {
+	// Handle SIGINT (CTRL+C) gracefully.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	// Set up OpenTelemetry.
+	otelShutdown, err := setupOTelSDK(ctx)
+	if err != nil {
+		return
+	}
+	// Handle shutdown properly so nothing leaks.
+	defer func() {
+		err = errors.Join(err, otelShutdown(context.Background()))
+	}()
 	logs.Init()
 
 	router := gin.New()
@@ -30,7 +48,7 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 	config.AppConfig = *appConfig
-	router.Use(gin.Recovery(), gin.Logger())
+	router.Use(gin.Recovery(), gin.Logger(), middleware.TracingMiddleware())
 	config.Connect(appConfig)
 
 	app, err := wire.InitializeApp()

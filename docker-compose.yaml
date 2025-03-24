@@ -1,22 +1,22 @@
   services:
-    database:
-      image: postgres
-      restart: always
-      environment:
-        - POSTGRES_USER=${POSTGRES_USER}
-        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-        - POSTGRES_DB=${POSTGRES_DB}
-      ports:
-        - "5433:5432"
-      volumes:
-        - db:/var/lib/postgresql/data
-      networks:
-        - app-network
-      healthcheck:
-        test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-        interval: 10s
-        timeout: 5s
-        retries: 5
+    # database:
+    #   image: postgres
+    #   restart: always
+    #   environment:
+    #     - POSTGRES_USER=${POSTGRES_USER}
+    #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    #     - POSTGRES_DB=${POSTGRES_DB}
+    #   ports:
+    #     - "5433:5432"
+    #   volumes:
+    #     - db:/var/lib/postgresql/data
+    #   networks:
+    #     - app-network
+    #   healthcheck:
+    #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+    #     interval: 10s
+    #     timeout: 5s
+    #     retries: 5
 
     redis:
       image: redis:latest
@@ -52,30 +52,30 @@
         timeout: 5s
         retries: 5
 
-    app:
-      build: .
-      restart: always
-      ports:
-        - "8081:8080"
-      depends_on:
-        database:
-          condition: service_healthy
-        rabbitmq:
-          condition: service_healthy
-        redis:  # Add redis dependency
-          condition: service_healthy  # Ensure Redis is healthy before starting app        
-      environment:
-        - DB_HOST=database
-        - DB_PORT=5432
-        - DB_USER=${POSTGRES_USER}
-        - DB_PASSWORD=${POSTGRES_PASSWORD}
-        - DB_NAME=${POSTGRES_DB}
-        - LOG_FILE_PATH=/app/logs/app.log
-      volumes:
-        - .:/app
-        - C:/Users/Admin/Desktop/test/logs:/app/logs
-      networks:
-        - app-network
+    # app:
+    #   build: .
+    #   restart: always
+    #   ports:
+    #     - "8081:8080"
+    #   depends_on:
+    #     database:
+    #       condition: service_healthy
+    #     rabbitmq:
+    #       condition: service_healthy
+    #     redis:  # Add redis dependency
+    #       condition: service_healthy  # Ensure Redis is healthy before starting app        
+    #   environment:
+    #     - DB_HOST=database
+    #     - DB_PORT=5432
+    #     - DB_USER=${POSTGRES_USER}
+    #     - DB_PASSWORD=${POSTGRES_PASSWORD}
+    #     - DB_NAME=${POSTGRES_DB}
+    #     - LOG_FILE_PATH=/app/logs/app.log
+    #   volumes:
+    #     - .:/app
+    #     - ./logs:/app/logs
+    #   networks:
+    #     - app-network
 
     elasticsearch:
       image: docker.elastic.co/elasticsearch/elasticsearch:8.6.2
@@ -108,7 +108,7 @@
     #   volumes:
     #     - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
     #     - /var/lib/docker/containers:/var/lib/docker/containers:ro
-    #     - C:/Users/Admin/Desktop/test/logs:/logs
+    #     - ./test/logs:/logs
     #   networks:
     #     - app-network
     #   healthcheck:
@@ -116,6 +116,25 @@
     #     interval: 10s
     #     timeout: 5s
     #     retries: 5
+  
+
+    jaeger:
+      image: jaegertracing/all-in-one:latest
+      container_name: jaeger
+      restart: always
+      environment:
+        - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+      ports:
+        - "5775:5775/udp"
+        - "6831:6831/udp"
+        - "6832:6832/udp"
+        - "5778:5778"
+        - "16686:16686"  # Giao diện web
+        - "14268:14268"  # Nhận traces từ OpenTelemetry (HTTP)
+        - "14250:14250"  # Nhận traces từ OpenTelemetry (gRPC)
+        - "9411:9411"    # Zipkin
+        - "14250:14250"  # Nhận traces từ OpenTelemetry (gRPC)
+        - "9411:9411"    # Zipkin
         
 
 
